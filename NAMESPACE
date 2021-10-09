@@ -23,3 +23,6 @@ importFrom(methods,canCoerce)
 importFrom(methods,is)
 importFrom(utils,head)
 useDynLib(glmGamPoi, .registration = TRUE)
+
+export(fitBeta_diagonal_fisher_scoring)
+export(jingleJangle)

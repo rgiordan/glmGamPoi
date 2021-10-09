@@ -340,6 +340,31 @@ List fitBeta_diagonal_fisher_scoring(RObject Y, const arma::mat& model_matrix, R
 
 
 
+
+// [[Rcpp::export]]
+List jingleJangle(RObject Y, const arma::mat& model_matrix, RObject exp_offset_matrix,
+                                     NumericVector thetas, SEXP beta_matSEXP,
+                                     double tolerance, double max_rel_mu_change, int max_iter) {
+  auto mattype=beachmat::find_sexp_type(Y);
+  if (mattype==INTSXP) {
+    return fitBeta_fisher_scoring_impl<int, beachmat::integer_matrix>(Y, model_matrix, exp_offset_matrix,
+                                                                      thetas,  beta_matSEXP,
+                                                                      /*ridge_penalty=*/ R_NilValue,
+                                                                      tolerance, max_rel_mu_change, max_iter,
+                                                                      /*use_diagonal_approx=*/ true);
+  } else if (mattype==REALSXP) {
+    return fitBeta_fisher_scoring_impl<double, beachmat::numeric_matrix>(Y, model_matrix, exp_offset_matrix,
+                                                                         thetas,  beta_matSEXP,
+                                                                         /*ridge_penalty=*/ R_NilValue,
+                                                                         tolerance, max_rel_mu_change, max_iter,
+                                                                         /*use_diagonal_approx=*/ true);
+  } else {
+    throw std::runtime_error("unacceptable matrix type");
+  }
+}
+
+
+
 // If there is only one group, there is no need to do the full Fisher-scoring
 // Instead a simple Newton-Raphson algorithm will do
 template<class NumericType>
@@ -434,12 +459,3 @@ List fitBeta_one_group(RObject Y, RObject offset_matrix,
     throw std::runtime_error("unacceptable matrix type");
   }
 }
-
-
-
-
-
-
-
-
-

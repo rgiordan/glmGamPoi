@@ -69,6 +69,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// jingleJangle
+List jingleJangle(RObject Y, const arma::mat& model_matrix, RObject exp_offset_matrix, NumericVector thetas, SEXP beta_matSEXP, double tolerance, double max_rel_mu_change, int max_iter);
+RcppExport SEXP _glmGamPoi_jingleJangle(SEXP YSEXP, SEXP model_matrixSEXP, SEXP exp_offset_matrixSEXP, SEXP thetasSEXP, SEXP beta_matSEXPSEXP, SEXP toleranceSEXP, SEXP max_rel_mu_changeSEXP, SEXP max_iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RObject >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
+    Rcpp::traits::input_parameter< RObject >::type exp_offset_matrix(exp_offset_matrixSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type thetas(thetasSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type beta_matSEXP(beta_matSEXPSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type max_rel_mu_change(max_rel_mu_changeSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(jingleJangle(Y, model_matrix, exp_offset_matrix, thetas, beta_matSEXP, tolerance, max_rel_mu_change, max_iter));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fitBeta_one_group
 List fitBeta_one_group(RObject Y, RObject offset_matrix, NumericVector thetas, NumericVector beta_start_values, double tolerance, int maxIter);
 RcppExport SEXP _glmGamPoi_fitBeta_one_group(SEXP YSEXP, SEXP offset_matrixSEXP, SEXP thetasSEXP, SEXP beta_start_valuesSEXP, SEXP toleranceSEXP, SEXP maxIterSEXP) {
@@ -271,6 +289,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_glmGamPoi_get_row_groups", (DL_FUNC) &_glmGamPoi_get_row_groups, 3},
     {"_glmGamPoi_fitBeta_fisher_scoring", (DL_FUNC) &_glmGamPoi_fitBeta_fisher_scoring, 9},
     {"_glmGamPoi_fitBeta_diagonal_fisher_scoring", (DL_FUNC) &_glmGamPoi_fitBeta_diagonal_fisher_scoring, 8},
+    {"_glmGamPoi_jingleJangle", (DL_FUNC) &_glmGamPoi_jingleJangle, 8},
     {"_glmGamPoi_fitBeta_one_group", (DL_FUNC) &_glmGamPoi_fitBeta_one_group, 6},
     {"_glmGamPoi_compute_gp_deviance_mask", (DL_FUNC) &_glmGamPoi_compute_gp_deviance_mask, 3},
     {"_glmGamPoi_compute_gp_deviance_sum_mask", (DL_FUNC) &_glmGamPoi_compute_gp_deviance_sum_mask, 3},

@@ -17,6 +17,10 @@ fitBeta_diagonal_fisher_scoring <- function(Y, model_matrix, exp_offset_matrix, 
     .Call(`_glmGamPoi_fitBeta_diagonal_fisher_scoring`, Y, model_matrix, exp_offset_matrix, thetas, beta_matSEXP, tolerance, max_rel_mu_change, max_iter)
 }
 
+jingleJangle <- function(Y, model_matrix, exp_offset_matrix, thetas, beta_matSEXP, tolerance, max_rel_mu_change, max_iter) {
+    .Call(`_glmGamPoi_jingleJangle`, Y, model_matrix, exp_offset_matrix, thetas, beta_matSEXP, tolerance, max_rel_mu_change, max_iter)
+}
+
 fitBeta_one_group <- function(Y, offset_matrix, thetas, beta_start_values, tolerance, maxIter) {
     .Call(`_glmGamPoi_fitBeta_one_group`, Y, offset_matrix, thetas, beta_start_values, tolerance, maxIter)
 }
