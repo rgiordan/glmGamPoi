@@ -340,7 +340,7 @@ List fitBeta_diagonal_fisher_scoring(RObject Y, const arma::mat& model_matrix, R
 
 
 
-
+// Just to make sure I'm able to export things
 // [[Rcpp::export]]
 List jingleJangle(RObject Y, const arma::mat& model_matrix, RObject exp_offset_matrix,
                                      NumericVector thetas, SEXP beta_matSEXP,
@@ -455,6 +455,153 @@ List fitBeta_one_group(RObject Y, RObject offset_matrix,
     return fitBeta_one_group_internal<beachmat::integer_matrix>(Y, offset_matrix, thetas, beta_start_values, tolerance, maxIter);
   } else if (mattype==REALSXP) {
     return fitBeta_one_group_internal<beachmat::numeric_matrix>(Y, offset_matrix, thetas, beta_start_values, tolerance, maxIter);
+  } else {
+    throw std::runtime_error("unacceptable matrix type");
+  }
+}
+
+
+
+
+
+
+// fit the Negative Binomial GLM with Fisher scoring
+// note: the betas are on the natural log scale
+//
+template<class NumericType, class BMNumericType>
+List fitBeta_fisher_scoring_single_step(
+    RObject Y, const arma::mat& model_matrix, RObject exp_offset_matrix,
+    NumericVector thetas, SEXP beta_matSEXP, Nullable<NumericMatrix> ridge_penalty_nl,
+    double tolerance, double max_rel_mu_change, int max_iter, bool use_diagonal_approx) {
+  auto Y_bm = beachmat::create_matrix<BMNumericType>(Y);
+  auto exp_offsets_bm = beachmat::create_numeric_matrix(exp_offset_matrix);
+  int n_samples = Y_bm->get_ncol();
+  int n_genes = Y_bm->get_nrow();
+
+  // the ridge penalty
+  bool apply_ridge_penalty = ridge_penalty_nl.isNotNull();
+  arma::mat ridge_penalty;
+  arma::mat ridge_penalty_sq;
+  arma::vec ridge_target;
+  if(apply_ridge_penalty){
+    NumericMatrix tmp = ridge_penalty_nl.get();
+    ridge_penalty = arma::mat(tmp.cbegin(), tmp.nrow(), tmp.ncol());
+    if(model_matrix.n_cols != ridge_penalty.n_cols){
+      stop("Number of columns in model_matrix does not match the columns of the ridge_penalty");
+    }
+    ridge_penalty_sq = ridge_penalty.t() * ridge_penalty;
+
+    if(tmp.hasAttribute("target")){
+      ridge_target = (NumericVector) tmp.attr("target");
+    }else{
+      ridge_target = arma::zeros(tmp.ncol());
+    }
+  }
+  // The result
+  arma::mat beta_mat = as<arma::mat>(beta_matSEXP);
+
+  int gene_idx = 0; // TODO: pass this in
+
+  // deviance, convergence and tolerance
+  // NumericVector iterations(n_genes);
+  // NumericVector deviance(n_genes);
+  // for (int gene_idx = 0; gene_idx < n_genes; gene_idx++) {
+    // if (gene_idx % 100 == 0) checkUserInterrupt();
+    // Fill count and offset vector from beachmat matrix
+    arma::Col<NumericType> counts(n_samples);
+    Y_bm->get_row(gene_idx, counts.begin());
+    arma::Col<double> exp_off(n_samples);
+    exp_offsets_bm->get_row(gene_idx, exp_off.begin());
+    // Init beta and mu
+    arma::vec beta_hat = beta_mat.row(gene_idx).t();
+    arma::vec mu_hat = calculate_mu(model_matrix, beta_hat, exp_off);
+    if(beta_hat.has_nan() || Rcpp::traits::is_na<REALSXP>(thetas(gene_idx))){
+      beta_hat.fill(NA_REAL);
+      // iterations(gene_idx) = 0;
+      // deviance(gene_idx) = NA_REAL;
+      // continue;
+      throw std::runtime_error("nan in betahat");
+    }
+    // Init deviance
+    // double dev_old = 0;
+    // if(apply_ridge_penalty){
+    //   // For diagonal ridge_penalty: pen = Sum (lambda_i b_i)^2
+    //   double pen_sum = n_samples * arma::as_scalar((beta_hat - ridge_target).t() * ridge_penalty_sq * (beta_hat - ridge_target));
+    //   dev_old = compute_gp_deviance_sum(counts, mu_hat, thetas(gene_idx)) + pen_sum;
+    // }else{
+    //   dev_old = compute_gp_deviance_sum(counts, mu_hat, thetas(gene_idx));
+    // }
+    // for (int t = 0; t < max_iter; t++) {
+  // iterations(gene_idx)++;
+  // Find good direction to optimize beta
+  arma::vec step;
+  if(use_diagonal_approx){
+    step = fisher_scoring_diagonal_step(model_matrix, counts, mu_hat, thetas(gene_idx) * mu_hat);
+  } else {
+    if(apply_ridge_penalty){
+      step = fisher_scoring_qr_ridge_step(
+          model_matrix, counts, mu_hat, thetas(gene_idx) * mu_hat,
+          ridge_penalty, ridge_target, beta_hat);
+    } else {
+      step = fisher_scoring_qr_step(
+          model_matrix, counts, mu_hat, thetas(gene_idx) * mu_hat);
+    }
+  }
+
+      // // Find step size that actually decreases the deviance
+      // double dev = 0;
+      // if(apply_ridge_penalty){
+      //   dev = decrease_deviance_plus_ridge(beta_hat, mu_hat, step, model_matrix, ridge_penalty_sq, ridge_target,
+      //                           exp_off, counts, thetas(gene_idx), dev_old, tolerance, max_rel_mu_change);
+      // }else{
+      //   dev = decrease_deviance(beta_hat, mu_hat, step, model_matrix,
+      //                           exp_off, counts, thetas(gene_idx), dev_old, tolerance, max_rel_mu_change);
+      // }
+      // double conv_test = fabs(dev - dev_old)/(fabs(dev) + 0.1);
+      // dev_old = dev;
+      // if (std::isnan(conv_test)) {
+      //   // This should not happen
+      //   beta_hat.fill(NA_REAL);
+      //   iterations(gene_idx) = max_iter;
+      //   break;
+      // }
+      // if (conv_test < tolerance) {
+      //   break;
+      // }
+    // }
+    // beta_mat.row(gene_idx) = beta_hat.t();
+    // deviance(gene_idx) = dev_old;
+  // }
+
+  return List::create(
+    Named("beta_mat", beta_mat),
+    // Named("iter", iterations),
+    // Named("deviance", deviance),
+    Named("step", step));
+}
+
+
+
+// [[Rcpp::export]]
+List fisher_scoring_qr_step_export(
+    RObject Y, const arma::mat& model_matrix, RObject exp_offset_matrix,
+    NumericVector thetas, SEXP beta_matSEXP, Nullable<NumericMatrix> ridge_penalty_nl,
+    double tolerance, double max_rel_mu_change, int max_iter) {
+  auto mattype=beachmat::find_sexp_type(Y);
+  if (mattype==INTSXP) {
+      throw std::runtime_error("unacceptable matrix type (INTSXP not implemented)");
+    // return fitBeta_fisher_scoring_impl<int, beachmat::integer_matrix>(Y, model_matrix, exp_offset_matrix,
+    //                                                                   thetas,  beta_matSEXP,
+    //                                                                   /*ridge_penalty=*/ ridge_penalty_nl,
+    //                                                                   tolerance, max_rel_mu_change, max_iter,
+    //                                                                   /*use_diagonal_approx=*/ false);
+  } else if (mattype==REALSXP) {
+    return fitBeta_fisher_scoring_single_step<double, beachmat::numeric_matrix>(
+        Y, model_matrix, exp_offset_matrix,
+         thetas,  beta_matSEXP,
+         /*ridge_penalty=*/ ridge_penalty_nl,
+         tolerance, max_rel_mu_change, max_iter,
+          /*use_diagonal_approx=*/ false);
   } else {
     throw std::runtime_error("unacceptable matrix type");
   }

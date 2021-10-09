@@ -102,6 +102,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fisher_scoring_qr_step_export
+List fisher_scoring_qr_step_export(RObject Y, const arma::mat& model_matrix, RObject exp_offset_matrix, NumericVector thetas, SEXP beta_matSEXP, Nullable<NumericMatrix> ridge_penalty_nl, double tolerance, double max_rel_mu_change, int max_iter);
+RcppExport SEXP _glmGamPoi_fisher_scoring_qr_step_export(SEXP YSEXP, SEXP model_matrixSEXP, SEXP exp_offset_matrixSEXP, SEXP thetasSEXP, SEXP beta_matSEXPSEXP, SEXP ridge_penalty_nlSEXP, SEXP toleranceSEXP, SEXP max_rel_mu_changeSEXP, SEXP max_iterSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RObject >::type Y(YSEXP);
+    Rcpp::traits::input_parameter< const arma::mat& >::type model_matrix(model_matrixSEXP);
+    Rcpp::traits::input_parameter< RObject >::type exp_offset_matrix(exp_offset_matrixSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type thetas(thetasSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type beta_matSEXP(beta_matSEXPSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericMatrix> >::type ridge_penalty_nl(ridge_penalty_nlSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type max_rel_mu_change(max_rel_mu_changeSEXP);
+    Rcpp::traits::input_parameter< int >::type max_iter(max_iterSEXP);
+    rcpp_result_gen = Rcpp::wrap(fisher_scoring_qr_step_export(Y, model_matrix, exp_offset_matrix, thetas, beta_matSEXP, ridge_penalty_nl, tolerance, max_rel_mu_change, max_iter));
+    return rcpp_result_gen;
+END_RCPP
+}
 // compute_gp_deviance_mask
 double compute_gp_deviance_mask(double y, double mu, double theta);
 RcppExport SEXP _glmGamPoi_compute_gp_deviance_mask(SEXP ySEXP, SEXP muSEXP, SEXP thetaSEXP) {
@@ -291,6 +310,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_glmGamPoi_fitBeta_diagonal_fisher_scoring", (DL_FUNC) &_glmGamPoi_fitBeta_diagonal_fisher_scoring, 8},
     {"_glmGamPoi_jingleJangle", (DL_FUNC) &_glmGamPoi_jingleJangle, 8},
     {"_glmGamPoi_fitBeta_one_group", (DL_FUNC) &_glmGamPoi_fitBeta_one_group, 6},
+    {"_glmGamPoi_fisher_scoring_qr_step_export", (DL_FUNC) &_glmGamPoi_fisher_scoring_qr_step_export, 9},
     {"_glmGamPoi_compute_gp_deviance_mask", (DL_FUNC) &_glmGamPoi_compute_gp_deviance_mask, 3},
     {"_glmGamPoi_compute_gp_deviance_sum_mask", (DL_FUNC) &_glmGamPoi_compute_gp_deviance_sum_mask, 3},
     {"_glmGamPoi_compute_gp_deviance_residuals_matrix_mask", (DL_FUNC) &_glmGamPoi_compute_gp_deviance_residuals_matrix_mask, 3},

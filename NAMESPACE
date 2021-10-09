@@ -26,3 +26,4 @@ useDynLib(glmGamPoi, .registration = TRUE)
 
 export(fitBeta_diagonal_fisher_scoring)
 export(jingleJangle)
+export(fisher_scoring_qr_step_export)
